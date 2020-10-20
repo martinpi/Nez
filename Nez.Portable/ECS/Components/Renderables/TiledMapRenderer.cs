@@ -59,17 +59,17 @@ namespace Nez
 
 		#region TiledMap queries
 
-		public int GetRowAtWorldPosition(float yPos)
-		{
-			yPos -= Entity.Transform.Position.Y + _localOffset.Y;
-			return TiledMap.WorldToTilePositionY(yPos);
-		}
+		//public int GetRowAtWorldPosition(float yPos)
+		//{
+		//	yPos -= Entity.Transform.Position.Y + _localOffset.Y;
+		//	return TiledMap.WorldToTilePositionY(yPos);
+		//}
 
-		public int GetColumnAtWorldPosition(float xPos)
-		{
-			xPos -= Entity.Transform.Position.X + _localOffset.X;
-			return TiledMap.WorldToTilePositionX(xPos);
-		}
+		//public int GetColumnAtWorldPosition(float xPos)
+		//{
+		//	xPos -= Entity.Transform.Position.X + _localOffset.X;
+		//	return TiledMap.WorldToTilePositionX(xPos);
+		//}
 
 		/// <summary>
 		/// this method requires that you are using a collision layer setup in the constructor.

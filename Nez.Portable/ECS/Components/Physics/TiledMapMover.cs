@@ -337,7 +337,7 @@ namespace Nez.Tiled
 					return false;
 
 				// our response should be the top of the platform
-				collisionResponse = TiledMap.TileToWorldPositionX(tile.Y);
+				collisionResponse = Mathf.FastFloorToInt(TiledMap.TileToWorldPosition(tile.Position).X);
 				return _boxColliderBounds.Bottom <= collisionResponse;
 			}
 
@@ -354,8 +354,13 @@ namespace Nez.Tiled
 
 				// we need the tile x position that is on the opposite side of our move direction. Moving right we want the left edge
 				var tileX = moveDir == Edge.Right
-					? TiledMap.TileToWorldPositionX(tile.X)
-					: TiledMap.TileToWorldPositionX(tile.X + 1);
+					? Mathf.FastFloorToInt(TiledMap.TileToWorldPosition(tile.Position).X)
+					: Mathf.FastFloorToInt(TiledMap.TileToWorldPosition(tile.Position + new Vector2(1f, 0f)).X);
+
+				// we need the tile x position that is on the opposite side of our move direction. Moving right we want the left edge
+				//var tileX = moveDir == Edge.Right
+				//	? TiledMap.TileToWorldPositionX(tile.X)
+				//	: TiledMap.TileToWorldPositionX(tile.X + 1);
 
 				// using the edge before movement, we see if we were colliding before moving.
 				var wasCollidingBeforeMove = moveDir == Edge.Right
@@ -372,16 +377,16 @@ namespace Nez.Tiled
 				switch (edgeToTest)
 				{
 					case Edge.Top:
-						collisionResponse = TiledMap.TileToWorldPositionY(tile.Y);
+						collisionResponse = Mathf.FastFloorToInt(TiledMap.TileToWorldPosition(tile.Position).Y);
 						break;
 					case Edge.Bottom:
-						collisionResponse = TiledMap.TileToWorldPositionY(tile.Y + 1);
+						collisionResponse = Mathf.FastFloorToInt(TiledMap.TileToWorldPosition(tile.Position + new Vector2(0f, 1f)).Y);
 						break;
 					case Edge.Left:
-						collisionResponse = TiledMap.TileToWorldPositionX(tile.X);
+						collisionResponse = Mathf.FastFloorToInt(TiledMap.TileToWorldPosition(tile.Position).X);
 						break;
 					case Edge.Right:
-						collisionResponse = TiledMap.TileToWorldPositionX(tile.X + 1);
+						collisionResponse = Mathf.FastFloorToInt(TiledMap.TileToWorldPosition(tile.Position + new Vector2(1f, 0f)).X);
 						break;
 				}
 
@@ -390,8 +395,8 @@ namespace Nez.Tiled
 
 			if (shouldTestSlopes)
 			{
-				var tileWorldX = TiledMap.TileToWorldPositionX(tile.X);
-				var tileWorldY = TiledMap.TileToWorldPositionX(tile.Y);
+				var tileWorldX = Mathf.FastFloorToInt(TiledMap.TileToWorldPosition(tile.Position).X);
+				var tileWorldY = Mathf.FastFloorToInt(TiledMap.TileToWorldPosition(tile.Position).Y);
 				var slope = tile.GetSlope();
 				var offset = tile.GetSlopeOffset();
 
@@ -473,9 +478,9 @@ namespace Nez.Tiled
 		int WorldToTilePosition(float worldPosition, Axis axis)
 		{
 			if (axis == Axis.Y)
-				return TiledMap.WorldToTilePositionY(worldPosition);
+				return TiledMap.WorldToTilePosition(new Vector2(0f, worldPosition)).Y;
 
-			return TiledMap.WorldToTilePositionX(worldPosition);
+			return TiledMap.WorldToTilePosition(new Vector2(worldPosition, 0f)).X;
 		}
 
 		/// <summary>

@@ -1,13 +1,27 @@
 using System;
 using Microsoft.Xna.Framework;
 
-namespace Nez.Tiled
-{
+namespace Nez {
+	public static class Vector2Extensions {
+		public static Vector2 Clamp(this Vector2 lhs, float min, float max) {
+			return new Vector2(Mathf.Clamp(lhs.X, min, max), Mathf.Clamp(lhs.Y, min, max));
+		}
+	}
+	public static class PointExtensions {
+		public static Point Clamp(this Point lhs, float min, float max) {
+			return new Point(Mathf.FastFloorToInt(Mathf.Clamp(lhs.X, min, max)), Mathf.FastFloorToInt(Mathf.Clamp(lhs.Y, min, max)));
+		}
+		public static Point ClampXY(this Point lhs, float minX, float maxX, float minY, float maxY) {
+			return new Point(Mathf.FastFloorToInt(Mathf.Clamp(lhs.X, minX, maxX)), Mathf.FastFloorToInt(Mathf.Clamp(lhs.Y, minY, maxY)));
+		}
+	}
+}
+
+namespace Nez.Tiled {
 	/// <summary>
 	/// contains runtime querying and other helper methods seperate from the tmx parsing in the other partial
 	/// </summary>
-	public partial class TmxMap : TmxDocument
-	{
+	public partial class TmxMap : TmxDocument {
 		#region Tileset and Layer getters
 
 		/// <summary>
@@ -15,13 +29,11 @@ namespace Nez.Tiled
 		/// </summary>
 		/// <returns>The tileset for tile identifier.</returns>
 		/// <param name="gid">Identifier.</param>
-		public TmxTileset GetTilesetForTileGid(int gid)
-		{
+		public TmxTileset GetTilesetForTileGid(int gid) {
 			if (gid == 0)
 				return null;
 
-			for (var i = Tilesets.Count - 1; i >= 0; i--)
-			{
+			for (var i = Tilesets.Count - 1; i >= 0; i--) {
 				if (Tilesets[i].FirstGid <= gid)
 					return Tilesets[i];
 			}
@@ -35,12 +47,9 @@ namespace Nez.Tiled
 		/// </summary>
 		/// <returns>The tileset tile.</returns>
 		/// <param name="gid">Identifier.</param>
-		public TmxTilesetTile GetTilesetTile(int gid)
-		{
-			for (var i = Tilesets.Count - 1; i >= 0; i--)
-			{
-				if (Tilesets[i].FirstGid <= gid)
-				{
+		public TmxTilesetTile GetTilesetTile(int gid) {
+			for (var i = Tilesets.Count - 1; i >= 0; i--) {
+				if (Tilesets[i].FirstGid <= gid) {
 					if (Tilesets[i].Tiles.TryGetValue(gid - Tilesets[i].FirstGid, out var tilesetTile))
 						return tilesetTile;
 				}
@@ -88,8 +97,18 @@ namespace Nez.Tiled
 		/// </summary>
 		/// <returns>The to tile position.</returns>
 		/// <param name="pos">Position.</param>
-		public Point WorldToTilePosition(Vector2 pos, bool clampToTilemapBounds = true)
-		{
+		public Point WorldToTilePosition(Vector2 pos, bool clampToTilemapBounds = true) {
+
+			if (Orientation == OrientationType.Isometric) {
+
+				var point = new Point(
+					Mathf.RoundToInt(pos.X / TileWidth + pos.Y / TileHeight - 0.5f),
+					Mathf.RoundToInt(pos.Y / TileHeight - pos.X / TileWidth));
+
+				if (!clampToTilemapBounds) return point;
+				return point.ClampXY(0, Width - 1, 0, Height - 1);
+			}
+
 			return new Point(WorldToTilePositionX(pos.X, clampToTilemapBounds), WorldToTilePositionY(pos.Y, clampToTilemapBounds));
 		}
 
@@ -98,8 +117,7 @@ namespace Nez.Tiled
 		/// </summary>
 		/// <returns>The to tile position x.</returns>
 		/// <param name="x">The x coordinate.</param>
-		public int WorldToTilePositionX(float x, bool clampToTilemapBounds = true)
-		{
+		private int WorldToTilePositionX(float x, bool clampToTilemapBounds = true) {
 			var tileX = Mathf.FastFloorToInt(x / TileWidth);
 			if (!clampToTilemapBounds)
 				return tileX;
@@ -111,8 +129,7 @@ namespace Nez.Tiled
 		/// </summary>
 		/// <returns>The to tile position y.</returns>
 		/// <param name="y">The y coordinate.</param>
-		public int WorldToTilePositionY(float y, bool clampToTilemapBounds = true)
-		{
+		private int WorldToTilePositionY(float y, bool clampToTilemapBounds = true) {
 			var tileY = Mathf.FloorToInt(y / TileHeight);
 			if (!clampToTilemapBounds)
 				return tileY;
@@ -124,21 +141,28 @@ namespace Nez.Tiled
 		/// </summary>
 		/// <returns>The to world position.</returns>
 		/// <param name="pos">Position.</param>
-		public Vector2 TileToWorldPosition(Vector2 pos) => new Vector2(TileToWorldPositionX((int)pos.X), TileToWorldPositionY((int)pos.Y));
+		public Vector2 TileToWorldPosition(Vector2 pos) {
+			if (Orientation == OrientationType.Isometric) {
+				return new Vector2((pos.X - pos.Y) * (TileWidth / 2),
+								   (pos.X + pos.Y) * (TileHeight / 2));
+			}
+
+			return new Vector2(TileToWorldPositionX((int)pos.X), TileToWorldPositionY((int)pos.Y));
+		}
 
 		/// <summary>
 		/// converts from tile to world position
 		/// </summary>
 		/// <returns>The to world position x.</returns>
 		/// <param name="x">The x coordinate.</param>
-		public int TileToWorldPositionX(int x) => x * TileWidth;
+		private int TileToWorldPositionX(int x) => x * TileWidth;
 
 		/// <summary>
 		/// converts from tile to world position
 		/// </summary>
 		/// <returns>The to world position y.</returns>
 		/// <param name="y">The y coordinate.</param>
-		public int TileToWorldPositionY(int y) => y * TileHeight;
+		private int TileToWorldPositionY(int y) => y * TileHeight;
 
 		#endregion
 
